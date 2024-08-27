@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/jfrog/archiver/v3"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -16,8 +17,6 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
-	"github.com/mholt/archiver"
 )
 
 // Src defines executable source
@@ -273,10 +272,10 @@ func (b *BinWrapper) Run(arg ...string) error {
 	}
 
 	if stdout != nil {
-		b.stdOut, _ = ioutil.ReadAll(stdout)
+		b.stdOut, _ = io.ReadAll(stdout)
 	}
 
-	b.stdErr, _ = ioutil.ReadAll(stderr)
+	b.stdErr, _ = io.ReadAll(stderr)
 	err = b.cmd.Wait()
 
 	if ctx.Err() == context.DeadlineExceeded {
@@ -359,7 +358,7 @@ func (b *BinWrapper) stripDir() error {
 	var dirsToRemove []string
 
 	for i := 0; i < b.strip; i++ {
-		files, err := ioutil.ReadDir(dir)
+		files, err := os.ReadDir(dir)
 
 		if err != nil {
 			return err
