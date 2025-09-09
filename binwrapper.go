@@ -6,9 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jfrog/archiver/v3"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -17,6 +15,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/mholt/archives"
 )
 
 // Src defines executable source
@@ -336,12 +336,72 @@ func (b *BinWrapper) download() error {
 }
 
 func (b *BinWrapper) extractFile(file string) error {
-
 	defer os.Remove(file)
-	err := archiver.Unarchive(file, b.dest)
 
+	// Open the archive file
+	f, err := os.Open(file)
+	if err != nil {
+		fmt.Printf("%s could not be opened\n", file)
+		return err
+	}
+	defer f.Close()
+
+	// Identify the archive format
+	format, _, err := archives.Identify(context.Background(), file, f)
 	if err != nil {
 		fmt.Printf("%s is not an archive or have unsupported archive format\n", file)
+		return err
+	}
+
+	// Type assert to Extractor
+	extractor, ok := format.(archives.Extractor)
+	if !ok {
+		fmt.Printf("%s format does not support extraction\n", file)
+		return fmt.Errorf("format does not support extraction")
+	}
+
+	// Extract files
+	err = extractor.Extract(context.Background(), f, func(ctx context.Context, info archives.FileInfo) error {
+		// Skip directories for now (they will be created when needed)
+		if info.FileInfo.IsDir() {
+			return nil
+		}
+
+		// Open the file from archive
+		srcFile, err := info.Open()
+		if err != nil {
+			return err
+		}
+		defer srcFile.Close()
+
+		// Create destination path
+		destPath := filepath.Join(b.dest, info.NameInArchive)
+
+		// Create directory if needed
+		destDir := filepath.Dir(destPath)
+		if err := os.MkdirAll(destDir, 0755); err != nil {
+			return err
+		}
+
+		// Create destination file
+		destFile, err := os.Create(destPath)
+		if err != nil {
+			return err
+		}
+		defer destFile.Close()
+
+		// Copy content
+		_, err = io.Copy(destFile, srcFile)
+		if err != nil {
+			return err
+		}
+
+		// Preserve original file permissions
+		return os.Chmod(destPath, info.FileInfo.Mode())
+	})
+
+	if err != nil {
+		fmt.Printf("%s extraction failed\n", file)
 		return err
 	}
 
@@ -377,7 +437,7 @@ func (b *BinWrapper) stripDir() error {
 		}
 	}
 
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 
 	if err != nil {
 		return err

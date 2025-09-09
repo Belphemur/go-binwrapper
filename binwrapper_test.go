@@ -9,35 +9,50 @@ import (
 
 // Example of wrapping cwebp command line tool
 func ExampleNewBinWrapper() {
+	libwebpVersion := "1.6.0"
 	base := "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/"
 
-	bin := binwrapper.NewBinWrapper().
+	bin := binwrapper.NewBinWrapper()
+	bin.Src(
+		binwrapper.NewSrc().
+			URL(base + "libwebp-" + libwebpVersion + "-mac-arm64.tar.gz").
+			Os("darwin").
+			Arch("arm64")).
 		Src(
 			binwrapper.NewSrc().
-				URL(base + "libwebp-0.6.0-mac-10.12.tar.gz").
-				Os("darwin")).
+				URL(base + "libwebp-" + libwebpVersion + "-mac-x86-64.tar.gz").
+				Os("darwin").
+				Arch("x64")).
 		Src(
 			binwrapper.NewSrc().
-				URL(base + "libwebp-0.6.0-linux-x86-32.tar.gz").
+				URL(base + "libwebp-" + libwebpVersion + "-linux-x86-32.tar.gz").
 				Os("linux").
 				Arch("x86")).
 		Src(
 			binwrapper.NewSrc().
-				URL(base + "libwebp-0.6.0-linux-x86-64.tar.gz").
+				URL(base + "libwebp-" + libwebpVersion + "-linux-x86-64.tar.gz").
 				Os("linux").
 				Arch("x64")).
 		Src(
 			binwrapper.NewSrc().
-				URL(base + "libwebp-0.6.0-windows-x64.zip").
-				Os("win32").
-				Arch("x64").
-				ExecPath("cwebp.exe")).
+				URL(base + "libwebp-" + libwebpVersion + "-linux-aarch64.tar.gz").
+				Os("linux").
+				Arch("arm64")).
 		Src(
 			binwrapper.NewSrc().
-				URL(base + "libwebp-0.6.0-windows-x86.zip").
+				URL(base + "libwebp-" + libwebpVersion + "-linux-aarch64.tar.gz").
+				Os("linux").
+				Arch("aarch64")).
+		Src(
+			binwrapper.NewSrc().
+				URL(base + "libwebp-" + libwebpVersion + "-windows-x64.zip").
 				Os("win32").
-				Arch("x86").
-				ExecPath("cwebp.exe")).
+				Arch("x64")).
+		Src(
+			binwrapper.NewSrc().
+				URL(base + "libwebp-" + libwebpVersion + "-windows-x86.zip").
+				Os("win32").
+				Arch("x86")).
 		Strip(2).
 		Dest("vendor/cwebp").
 		ExecPath("cwebp")
@@ -50,36 +65,53 @@ func ExampleNewBinWrapper() {
 }
 
 func TestNewBinWrapperNoError(t *testing.T) {
+	libwebpVersion := "1.6.0"
 	base := "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/"
 
-	bin := binwrapper.NewBinWrapper().
+	bin := binwrapper.NewBinWrapper()
+	bin.Src(
+		binwrapper.NewSrc().
+			URL(base + "libwebp-" + libwebpVersion + "-mac-arm64.tar.gz").
+			Os("darwin").
+			Arch("arm64")).
 		Src(
 			binwrapper.NewSrc().
-				URL(base + "libwebp-0.6.0-mac-10.12.tar.gz").
-				Os("darwin")).
+				URL(base + "libwebp-" + libwebpVersion + "-mac-x86-64.tar.gz").
+				Os("darwin").
+				Arch("x64")).
 		Src(
 			binwrapper.NewSrc().
-				URL(base + "libwebp-0.6.0-linux-x86-32.tar.gz").
+				URL(base + "libwebp-" + libwebpVersion + "-linux-x86-32.tar.gz").
 				Os("linux").
 				Arch("x86")).
 		Src(
 			binwrapper.NewSrc().
-				URL(base + "libwebp-0.6.0-linux-x86-64.tar.gz").
+				URL(base + "libwebp-" + libwebpVersion + "-linux-x86-64.tar.gz").
 				Os("linux").
 				Arch("x64")).
 		Src(
 			binwrapper.NewSrc().
-				URL(base + "libwebp-0.6.0-windows-x64.zip").
+				URL(base + "libwebp-" + libwebpVersion + "-linux-aarch64.tar.gz").
+				Os("linux").
+				Arch("arm64")).
+		Src(
+			binwrapper.NewSrc().
+				URL(base + "libwebp-" + libwebpVersion + "-linux-aarch64.tar.gz").
+				Os("linux").
+				Arch("aarch64")).
+		Src(
+			binwrapper.NewSrc().
+				URL(base + "libwebp-" + libwebpVersion + "-windows-x64.zip").
 				Os("win32").
 				Arch("x64")).
 		Src(
 			binwrapper.NewSrc().
-				URL(base + "libwebp-0.6.0-windows-x86.zip").
+				URL(base + "libwebp-" + libwebpVersion + "-windows-x86.zip").
 				Os("win32").
 				Arch("x86")).
 		Strip(2).
-		Dest("vendor/cwebp").
-		ExecPath("cwebp").AutoExe()
+		Dest("test/cwebp").
+		ExecPath("cwebp")
 
 	err := bin.Run("-version")
 	assert.Nil(t, err)
